@@ -25,12 +25,15 @@
 #ifndef PFX_TREE_H
 #define PFX_TREE_H
 
+#include <stdbool.h>
+#include <wchar.h>
+
 typedef struct pfx_tree_node *pfx_tree_t;
 typedef struct pfx_tree_node *pfx_tree_iter_t;
 
 pfx_tree_t pfx_tree_init();
 void pfx_tree_destroy(pfx_tree_t tree);
-bool pfx_tree_insert_safe(pfx_tree_t tree, wchar_t key[], void *value);
+bool pfx_tree_insert_safe(pfx_tree_t tree, const wchar_t key[], size_t key_size, void *value);
 pfx_tree_iter_t pfx_tree_get_iter(pfx_tree_t tree);
 
 pfx_tree_iter_t pfx_tree_iter_next(pfx_tree_iter_t iter, wchar_t c);
