@@ -26,10 +26,9 @@
 #include <unistd.h>
 #include "pfx_tree.h"
 
-const char *opts = "c";
-const struct *long_opts
+static const char opts[] = "c";
 
-void print_help()
+static void print_help()
 {
 	perror("Usage: substitute [options] file");
 }
