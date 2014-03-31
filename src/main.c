@@ -23,30 +23,131 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
+#include <getopt.h>
 #include "pfx_tree.h"
 
-static const char opts[] = "c";
+static const char opts[] = "hr:s:b:";
+static const struct option long_opts[] = {
+	{
+		.name = "help",
+		.has_arg = no_argument,
+		.flag = NULL,
+		.val = 'h'
+	},
+	{
+		.name = "replace",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = 'r'
+	},
+	{
+		.name = "subst-var",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = 's'
+	},
+	{
+		.name = "subst-var-by",
+		.has_arg = required_argument,
+		.flag = NULL,
+		.val = 'b'
+	},
+	NULL
+};
 
-static void print_help()
+static bool get_two_subopts(int argc, char *argv[], char **opt1, char **opt2)
 {
-	perror("Usage: substitute [options] file");
+	if (optind >= argc || argv[optind][0] == '-') {
+		fprintf(stderr, "Not enough arguments for that option\n");
+		return false;
+	}
+
+	*opt1 = optarg;
+	*opt2 = argv[optind];
+	++optind;
+	return true;
+}
+
+static wchar_t *from_char(const char *str)
+{
+	size_t len = strlen(str);
+	wchar_t *ret = malloc((len+1) * sizeof(wchar_t));
+
+	if (ret == NULL)
+		return NULL;
+
+	for (size_t i = 0; i < len; ++i)
+		ret[i] = str[i];
+	return ret;
 }
 
 int main(int argc, char *argv[])
 {
-	int ret;
+	int opt_ret, main_ret = EXIT_FAILURE;
+	pfx_tree_t substitutions;
 
-	while ((ret = getopt(argc, argv, opts)) != -1) {
-		switch (ret) {
-			default:
-				print_help();
-				return EXIT_FAILURE;
-		}
-		printf("%c", ret);
+	substitutions = pfx_tree_init();
+	if (substitutions == NULL) {
+		fprintf(stderr, "Failed to allocate the subsitution tree\n");
+		goto main_cleanup;
 	}
 
-	printf("Parsed args\n");
+	while ((opt_ret = getopt_long(argc, argv, opts, long_opts, NULL)) != -1) {
+		char *opt1, *opt2;
+		switch (opt_ret) {
+			case 'b':
+				// TODO(wak): Implement
+			case 's':
+				// TODO(wak): Implement
+				fprintf(stderr, "This function is not implemented yet\n");
+				goto main_cleanup;
+			case 'r':
+				if (!get_two_subopts(argc, argv, &opt1, &opt2))
+					goto main_print_help;
 
-	return EXIT_SUCCESS;
+				wchar_t *key_str = from_char(opt1);
+				if (key_str == NULL) {
+					fprintf(stderr,
+							"Failed to allocate memory for replacement keys\n");
+					goto main_cleanup;
+				}
+
+				pfx_tree_insert_safe(substitutions,
+						key_str, strlen(opt1), opt2);
+				free(key_str);
+				break;
+			case 'h':
+			default:
+				goto main_print_help;
+		}
+	}
+	argv += optind;
+	argc -= optind;
+
+	if (argc != 2) {
+		fprintf(stderr, "You must pass a SRC and DEST file\n");
+		goto main_print_help;
+	}
+
+	// TODO(wak): Perform replace action in the file
+
+	main_ret = EXIT_SUCCESS;
+	goto main_cleanup;
+
+main_print_help:
+	fprintf(stderr, "Usage: substitute [OPTION] SRC DEST\n");
+	fprintf(stderr, "Example: substitute -r foo bar in.txt out.txt\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Options:\n");
+	fprintf(stderr, "  -h, --help                          "
+			"Displays this help text\n");
+	fprintf(stderr, "  -r, --replace=NEEDLE REPLACEMENT    "
+			"Replaces the NEEDLE in the source text with REPLACEMENT\n");
+	fprintf(stderr, "  -s, --subst-var=VAR REPLACEMENT     TODO\n");
+	fprintf(stderr, "  -b, --subst-var-by=VAR REPLACEMENT  TODO\n");
+main_cleanup:
+	pfx_tree_destroy(substitutions);
+	return main_ret;
 }
