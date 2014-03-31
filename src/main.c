@@ -95,9 +95,13 @@ int main(int argc, char *argv[])
 							"Failed to allocate memory for replacement keys\n");
 					goto main_cleanup;
 				}
-
-				pfx_tree_insert_safe(substitutions,
-						key_str, strlen(opt1), opt2);
+				if (!pfx_tree_insert_safe(substitutions,
+						key_str, strlen(opt1), opt2)) {
+					free(key_str);
+					fprintf(stderr, "Failed to insert replacement, "
+							"it probably shares a key with another.\n");
+					goto main_cleanup;
+				}
 				free(key_str);
 				break;
 			case 'h':
