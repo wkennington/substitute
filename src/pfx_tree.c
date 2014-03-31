@@ -73,6 +73,9 @@ pfx_tree_t pfx_tree_init()
 
 void pfx_tree_destroy(pfx_tree_t tree)
 {
+	if (tree == NULL)
+		return;
+
 	for (size_t i = 0; i < tree->children_count; ++i)
 		pfx_tree_destroy(tree->children[i]);
 
