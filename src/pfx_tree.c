@@ -114,6 +114,7 @@ bool pfx_tree_insert_safe(pfx_tree_t tree, const wchar_t key[],
 			tree->children[idx] = pfx_tree_init();
 			if (tree->children[idx] == NULL)
 				return false;
+			tree->children[idx]->c = key[0];
 		}
 
 		tree = tree->children[idx];
