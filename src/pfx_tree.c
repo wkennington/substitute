@@ -109,7 +109,10 @@ bool pfx_tree_insert_safe(pfx_tree_t tree, const wchar_t key[],
 			/* Insertion into children */
 			memmove(tree->children+idx+1, tree->children+idx,
 					tree->children_count-idx);
-			tree->children[idx];
+			++tree->children_count;
+			tree->children[idx] = pfx_tree_init();
+			if (tree->children[idx] == NULL)
+				return false;
 		}
 
 		tree = tree->children[idx];
