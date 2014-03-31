@@ -17,9 +17,14 @@ LT_PREREQ([2.2])
 LT_INIT
 
 AC_PROG_CC_C99
+AM_PROG_CC_C_O
+
+PKG_PROG_PKG_CONFIG
+PKG_CHECK_MODULES([CHECK], [check >= 0.9.4])
 
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
+	tests/Makefile
 ])
 AC_OUTPUT
