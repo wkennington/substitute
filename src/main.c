@@ -28,7 +28,7 @@
 #include <getopt.h>
 #include "pfx_tree.h"
 
-static const char opts[] = "hr:s:b:";
+static const char opts[] = "hr:";
 static const struct option long_opts[] = {
 	{
 		.name = "help",
@@ -41,18 +41,6 @@ static const struct option long_opts[] = {
 		.has_arg = required_argument,
 		.flag = NULL,
 		.val = 'r'
-	},
-	{
-		.name = "subst-var",
-		.has_arg = required_argument,
-		.flag = NULL,
-		.val = 's'
-	},
-	{
-		.name = "subst-var-by",
-		.has_arg = required_argument,
-		.flag = NULL,
-		.val = 'b'
 	},
 	NULL
 };
@@ -97,12 +85,6 @@ int main(int argc, char *argv[])
 	while ((opt_ret = getopt_long(argc, argv, opts, long_opts, NULL)) != -1) {
 		char *opt1, *opt2;
 		switch (opt_ret) {
-			case 'b':
-				// TODO(wak): Implement
-			case 's':
-				// TODO(wak): Implement
-				fprintf(stderr, "This function is not implemented yet\n");
-				goto main_cleanup;
 			case 'r':
 				if (!get_two_subopts(argc, argv, &opt1, &opt2))
 					goto main_print_help;
@@ -145,8 +127,6 @@ main_print_help:
 			"Displays this help text\n");
 	fprintf(stderr, "  -r, --replace=NEEDLE REPLACEMENT    "
 			"Replaces the NEEDLE in the source text with REPLACEMENT\n");
-	fprintf(stderr, "  -s, --subst-var=VAR REPLACEMENT     TODO\n");
-	fprintf(stderr, "  -b, --subst-var-by=VAR REPLACEMENT  TODO\n");
 main_cleanup:
 	pfx_tree_destroy(substitutions);
 	return main_ret;
