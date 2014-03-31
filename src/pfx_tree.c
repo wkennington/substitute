@@ -62,12 +62,17 @@ pfx_tree_t pfx_tree_init()
 {
 	pfx_tree_t tree = malloc(sizeof(struct pfx_tree_node));
 	if (tree == NULL)
-		return tree;
+		return NULL;
 
+	tree->data = NULL;
 	tree->children_count = 0;
 	tree->children_size = 7;
+
 	tree->children = malloc(sizeof(struct pfx_tree_node *)*tree->children_size);
-	tree->data = NULL;
+	if (tree->children == NULL) {
+		free(tree);
+		return NULL;
+	}
 	return tree;
 }
 
