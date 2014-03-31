@@ -81,7 +81,7 @@ START_TEST(test_same_prefix_forward)
 	ck_assert(pfx_tree_insert_safe(tree, s1, wcslen(s1), "data1"));
 	ck_assert(!pfx_tree_insert_safe(tree, s2, wcslen(s2), "data2"));
 	ck_assert_str_eq(get_str(tree, s1), "data1");
-	ck_assert(get_str(tree, s2) == NULL);
+	ck_assert_str_eq(get_str(tree, s2), "data1");
 	pfx_tree_destroy(tree);
 }
 END_TEST
