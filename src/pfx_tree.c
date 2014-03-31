@@ -127,6 +127,10 @@ bool pfx_tree_insert_safe(pfx_tree_t tree, const wchar_t key[],
 			return false;
 	}
 
+	/* Guarantee we will not replace an existing prefix */
+	if (tree->children_count > 0)
+		return false;
+
 	tree->data = value;
 	return true;
 }
