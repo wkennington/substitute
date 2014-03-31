@@ -22,11 +22,10 @@
  * THE SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <check.h>
 #include <wchar.h>
 
 #include "../src/pfx_tree.h"
+#include "common.h"
 
 START_TEST(test_init)
 {
@@ -102,36 +101,15 @@ END_TEST
 Suite *pfx_tree_suite()
 {
 	Suite *s = suite_create("PFX_Tree");
-
-	TCase *tc_init = tcase_create("Init");
-	tcase_add_test(tc_init, test_init);
-	suite_add_tcase(s, tc_init);
-
-	TCase *tc_one = tcase_create("One");
-	tcase_add_test(tc_one, test_one);
-	suite_add_tcase(s, tc_one);
-
-	TCase *tc_multi = tcase_create("Multi");
-	tcase_add_test(tc_multi, test_multi);
-	suite_add_tcase(s, tc_multi);
-
-	TCase *tc_same_prefix_forward = tcase_create("Same Prefix Forward");
-	tcase_add_test(tc_same_prefix_forward, test_same_prefix_forward);
-	suite_add_tcase(s, tc_same_prefix_forward);
-
-	TCase *tc_same_prefix_backward = tcase_create("Same Prefix Backward");
-	tcase_add_test(tc_same_prefix_backward, test_same_prefix_backward);
-	suite_add_tcase(s, tc_same_prefix_backward);
-
+	TCASE_ADD(s, "Init", test_init);
+	TCASE_ADD(s, "One", test_one);
+	TCASE_ADD(s, "Multi", test_multi);
+	TCASE_ADD(s, "Same Prefix Forward", test_same_prefix_forward);
+	TCASE_ADD(s, "Same Prefix Backward", test_same_prefix_backward);
 	return s;
 }
 
-int main(int argc, char *argv[])
+SRunner *srunner_generate()
 {
-	int nr_failed;
-	SRunner *sr = srunner_create(pfx_tree_suite());
-	srunner_run_all(sr, CK_NORMAL);
-	nr_failed = srunner_ntests_failed(sr);
-	srunner_free(sr);
-	return (nr_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+	return srunner_create(pfx_tree_suite());
 }
