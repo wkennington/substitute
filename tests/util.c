@@ -22,27 +22,38 @@
  * THE SOFTWARE.
  */
 
+#include <locale.h>
+#include <errno.h>
+
 #include "../src/util.h"
 #include "common.h"
 
+static void check_string(const char *in, const wchar_t *expected)
+{
+	wchar_t *ostr = from_utf8(in);
+	ck_assert(ostr != NULL);
+	ck_assert_int_eq(wcslen(ostr), wcslen(expected));
+	ck_assert_int_eq(memcmp(expected, ostr,
+				(wcslen(expected)+1) * sizeof(wchar_t)), 0);
+}
+
 START_TEST(test_utf8_simple)
 {
-	// TODO(wak): Implement
-	ck_assert(0);
+	check_string("hello", L"hello");
 }
 END_TEST
 
 START_TEST(test_utf8_complex)
 {
-	// TODO(wak): Implement
-	ck_assert(0);
+	setlocale(LC_ALL, "en_US.UTF-8");
+	check_string(u8"\u00A2world", L"\u00A2world");
 }
 END_TEST
 
 START_TEST(test_utf8_invalid)
 {
-	// TODO(wak): Implement
-	ck_assert(0);
+	ck_assert(from_utf8((char []){ 198, 0 }) == NULL);
+	ck_assert_int_eq(errno, EINVAL);
 }
 END_TEST
 
