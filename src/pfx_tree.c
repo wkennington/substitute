@@ -92,10 +92,6 @@ bool pfx_tree_insert_safe(pfx_tree_t tree, const wchar_t key[],
 		size_t key_size, void *value)
 {
 	while (key_size > 0) {
-		/* Guarantee we will reach the data of the key */
-		if (tree->data != NULL)
-			return false;
-
 		bool exists;
 		size_t idx = find_child_idx(tree, key[0], &exists);
 		if (!exists) {
@@ -123,6 +119,10 @@ bool pfx_tree_insert_safe(pfx_tree_t tree, const wchar_t key[],
 		tree = tree->children[idx];
 		++key;
 		--key_size;
+
+		/* Guarantee we will not share a prefix with other data */
+		if (tree->data != NULL)
+			return false;
 	}
 
 	tree->data = value;
