@@ -28,10 +28,15 @@
 #include <stdlib.h>
 #include <check.h>
 
-#define TCASE_ADD(suite, name, func) { \
+#define TCASE_ADD_(suite, name, func)  \
 	TCase *tc = tcase_create(name);    \
 	tcase_add_test(tc, func);          \
-	suite_add_tcase(suite, tc);        \
+	suite_add_tcase(suite, tc);
+
+#define TCASE_ADD(suite, name, func) { TCASE_ADD_(suite, name, func) }
+#define TCASE_ADD_CF(suite, name, func, setup, teardown) { \
+	TCASE_ADD_(suite, name, func)                          \
+	tcase_add_checked_fixture(tc, setup, teardown);        \
 }
 
 SRunner *srunner_generate();
