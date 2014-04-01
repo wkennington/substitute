@@ -135,6 +135,20 @@ bool pfx_tree_insert_safe(pfx_tree_t tree, const wchar_t key[],
 	return true;
 }
 
+ssize_t pfx_tree_height(pfx_tree_t tree)
+{
+	ssize_t height = -1;
+	if (tree == NULL)
+		return height;
+
+	for (size_t i = 0; i < tree->children_count; ++i) {
+		ssize_t tmp_height = pfx_tree_height(tree->children[i]);
+		height = height < tmp_height ? tmp_height : height;
+	}
+
+	return height + 1;
+}
+
 pfx_tree_iter_t pfx_tree_get_iter(pfx_tree_t tree)
 {
 	return tree;

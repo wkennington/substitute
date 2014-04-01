@@ -98,6 +98,17 @@ START_TEST(test_same_prefix_backward)
 }
 END_TEST
 
+START_TEST(test_height)
+{
+	wchar_t s1[] = L"hello", s2[] = L"foobar";
+	pfx_tree_t tree = pfx_tree_init();
+	ck_assert(pfx_tree_insert_safe(tree, s1, wcslen(s1), "data"));
+	ck_assert(pfx_tree_insert_safe(tree, s2, wcslen(s2), "data"));
+	ck_assert_int_eq(pfx_tree_height(tree), wcslen(s2));
+	pfx_tree_destroy(tree);
+}
+END_TEST
+
 Suite *pfx_tree_suite()
 {
 	Suite *s = suite_create("PFX_Tree");
@@ -106,6 +117,7 @@ Suite *pfx_tree_suite()
 	TCASE_ADD(s, "Multi", test_multi);
 	TCASE_ADD(s, "Same Prefix Forward", test_same_prefix_forward);
 	TCASE_ADD(s, "Same Prefix Backward", test_same_prefix_backward);
+	TCASE_ADD(s, "Height", test_height);
 	return s;
 }
 
