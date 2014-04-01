@@ -23,9 +23,12 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 
 #include "util.h"
+
+#define MIN_BUF_SIZE 4096
 
 wchar_t *from_utf8(const char *str)
 {
@@ -42,9 +45,44 @@ wchar_t *from_utf8(const char *str)
 	return ret;
 }
 
-bool substitute_file(const char *dest, const char *src, pfx_tree_t substitutions)
+static bool write_all(const void *ptr, size_t size, size_t count, FILE *stream)
 {
-	// TODO(wak): Implement
-	errno = ENOSYS;
-	return false;
+	size_t written;
+	while (count > 0 && (written = fwrite(ptr, size, count, stream)) > 0) {
+		ptr += written;
+		count -= written;
+	}
+	return count == 0;
+}
+
+bool substitute_file(const char *dest, const char *src,
+		pfx_tree_t substitutions)
+{
+	FILE *in = fopen(src, "r"), *out = fopen(dest, "w");
+	bool ret = false;
+	if (in == NULL || out == NULL)
+		goto substitute_cleanup;
+
+	{
+		size_t buf_size = pfx_tree_height(substitutions) * 5;
+		if (buf_size < MIN_BUF_SIZE)
+			buf_size = MIN_BUF_SIZE;
+		char sbuf[buf_size];
+		ssize_t in_bytes;
+
+		while((in_bytes = fread(sbuf, sizeof(char), buf_size, in)) > 0) {
+			if (!write_all(sbuf, sizeof(char), in_bytes, out))
+				goto substitute_cleanup;
+		}
+		if (in_bytes == -1)
+			goto substitute_cleanup;
+	}
+
+	ret = true;
+substitute_cleanup:
+	if (in != NULL)
+		fclose(in);
+	if (out != NULL)
+		fclose(out);
+	return ret;
 }
