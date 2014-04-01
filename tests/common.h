@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 {
 	int nr_failed;
 	SRunner *sr = srunner_generate();
+	srunner_set_fork_status(sr, CK_FORK);
 	srunner_run_all(sr, CK_NORMAL);
 	nr_failed = srunner_ntests_failed(sr);
 	srunner_free(sr);
