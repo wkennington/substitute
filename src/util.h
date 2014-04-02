@@ -31,7 +31,7 @@
 #include "pfx_tree.h"
 
 wchar_t *from_utf8(const char *str);
-bool substitute_file(const char *dest, const char *src,
-		pfx_tree_t substitutions);
+bool substitute_file(const char *dest_fn, const char *src_fn,
+		pfx_tree_t substitutions, size_t longest_replacement);
 
 #endif // UTIL_H

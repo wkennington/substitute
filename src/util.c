@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
 #include "util.h"
@@ -55,26 +56,86 @@ static bool write_all(const void *ptr, size_t size, size_t count, FILE *stream)
 	return count == 0;
 }
 
-bool substitute_file(const char *dest, const char *src,
-		pfx_tree_t substitutions)
+static bool replace_until(char *dest, size_t dest_size,
+		const char *src, size_t src_count, size_t stop_at,
+		FILE *out, pfx_tree_t substitutions)
 {
-	FILE *in = fopen(src, "r"), *out = fopen(dest, "w");
+	size_t dest_offset = 0, tree_offset = 0;
+	pfx_tree_iter_t iter = pfx_tree_get_iter(substitutions);
+
+#define MAYBE_WRITE(num)                                      \
+	if (dest_offset + num > dest_size) {                      \
+		if (!write_all(dest, sizeof(char), dest_offset, out)) \
+			return false;                                     \
+		dest_offset = 0;                                      \
+	}
+
+	while(src_count > stop_at) {
+		pfx_tree_iter_t next = pfx_tree_iter_next(iter, src[tree_offset]);
+		if (next == NULL) {
+			MAYBE_WRITE(1);
+			dest[dest_offset] = src[0];
+			++src;
+			--src_count;
+			++dest_offset;
+			tree_offset = 0;
+			iter = pfx_tree_get_iter(substitutions);
+			continue;
+		}
+		iter = next;
+		++tree_offset;
+
+		char *replacement = pfx_tree_iter_data(iter);
+		if (replacement == NULL)
+			continue;
+
+		size_t rep_len = strlen(replacement);
+		MAYBE_WRITE(rep_len);
+		memcpy(dest + dest_offset, replacement, rep_len * sizeof(char));
+		src += tree_offset;
+		src_count -= tree_offset;
+		dest_offset += rep_len;
+		tree_offset = 0;
+		iter = pfx_tree_get_iter(substitutions);
+
+	}
+	return write_all(dest, sizeof(char), dest_offset, out);
+}
+
+bool substitute_file(const char *dest_fn, const char *src_fn,
+		pfx_tree_t substitutions, size_t longest_replacement)
+{
+	FILE *in = fopen(src_fn, "r"), *out = fopen(dest_fn, "w");
 	bool ret = false;
 	if (in == NULL || out == NULL)
 		goto substitute_cleanup;
 
 	{
-		size_t buf_size = pfx_tree_height(substitutions) * 5;
-		if (buf_size < MIN_BUF_SIZE)
-			buf_size = MIN_BUF_SIZE;
-		char sbuf[buf_size];
-		ssize_t in_bytes;
+		size_t height = pfx_tree_height(substitutions);
+		size_t sbuf_size = (height+1) * 5, offset = 0;
+		size_t obuf_size = (longest_replacement+1) * 5;
+		if (sbuf_size < MIN_BUF_SIZE)
+			sbuf_size = MIN_BUF_SIZE;
+		char sbuf[sbuf_size], obuf[obuf_size];
+		ssize_t in_bytes, replaced;
 
-		while((in_bytes = fread(sbuf, sizeof(char), buf_size, in)) > 0) {
-			if (!write_all(sbuf, sizeof(char), in_bytes, out))
+		while((in_bytes = fread(sbuf + offset, sizeof(char),
+						sbuf_size - offset, in)) > 0) {
+			offset += in_bytes;
+			if (offset < height)
+				continue;
+
+			if (!replace_until(obuf, obuf_size, sbuf, offset, height,
+						out, substitutions))
 				goto substitute_cleanup;
+
+			memmove(sbuf, sbuf + offset - height, height);
+			offset = height;
 		}
 		if (in_bytes == -1)
+			goto substitute_cleanup;
+		if (!replace_until(obuf, obuf_size, sbuf, offset, 0,
+					out, substitutions))
 			goto substitute_cleanup;
 	}
 

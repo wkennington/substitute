@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
 {
 	int opt_ret, main_ret = EXIT_FAILURE;
 	pfx_tree_t substitutions;
+	size_t longest_replacement = 0;
 
 	substitutions = pfx_tree_init();
 	if (substitutions == NULL) {
@@ -91,6 +92,10 @@ int main(int argc, char *argv[])
 					goto main_cleanup;
 				}
 				free(key_str);
+
+				size_t tmp_replacement = strlen(opt2);
+				if (tmp_replacement > longest_replacement)
+					longest_replacement = tmp_replacement;
 				break;
 			case 'h':
 			default:
@@ -105,7 +110,8 @@ int main(int argc, char *argv[])
 		goto main_print_help;
 	}
 
-	if (!substitute_file(argv[1], argv[0], substitutions)) {
+	if (!substitute_file(argv[1], argv[0], substitutions,
+				longest_replacement)) {
 		perror("Error substituting");
 		goto main_cleanup;
 	}

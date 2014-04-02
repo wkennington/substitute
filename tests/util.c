@@ -130,13 +130,17 @@ struct subs {
 static void substitute_tester(const char *expected_fn,
 		const struct subs *substitutes)
 {
+	size_t longest_sub = 0;
 	pfx_tree_t tree = pfx_tree_init();
 	while (substitutes[0].key != NULL) {
 		ck_assert(pfx_tree_insert_safe(tree, substitutes[0].key,
 					wcslen(substitutes[0].key), substitutes[0].val));
+		size_t sub_len = strlen(substitutes[0].val);
+		if (sub_len > longest_sub)
+			longest_sub = sub_len;
 		++substitutes;
 	}
-	ck_assert(substitute_file(out, IN_FILE, tree));
+	ck_assert(substitute_file(out, IN_FILE, tree, longest_sub));
 	int expected_fd = open(expected_fn, 0);
 	ck_assert_int_ne(expected_fd, -1);
 	assert_file_eq(out_fd, expected_fd);
@@ -177,7 +181,7 @@ START_TEST(test_substitute_bad_input)
 	pfx_tree_t tree = pfx_tree_init();
 	struct stat before, after;
 	ck_assert_int_eq(stat(out, &before), 0);
-	ck_assert(!substitute_file(out, "does/not/exist", tree));
+	ck_assert(!substitute_file(out, "does/not/exist", tree, 0));
 	ck_assert_int_eq(stat(out, &after), 0);
 	ck_assert(before.st_ctime == after.st_ctime);
 	ck_assert(before.st_mtime == after.st_mtime);
