@@ -37,7 +37,7 @@ wchar_t *from_utf8(const char *str)
 	if (ret == NULL)
 		return NULL;
 
-	if (mbstowcs(ret, str, len) != len) {
+	if (mbstowcs(ret, str, len+1) != len) {
 		free(ret);
 		errno = EINVAL;
 		return NULL;
