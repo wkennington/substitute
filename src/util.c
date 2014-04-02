@@ -63,41 +63,33 @@ static bool replace_until(char *dest, size_t dest_size,
 	size_t dest_offset = 0, tree_offset = 0;
 	pfx_tree_iter_t iter = pfx_tree_get_iter(substitutions);
 
-#define MAYBE_WRITE(num)                                      \
-	if (dest_offset + num > dest_size) {                      \
-		if (!write_all(dest, sizeof(char), dest_offset, out)) \
-			return false;                                     \
-		dest_offset = 0;                                      \
+#define MAYBE_WRITE_AND_COPY(src_inc, buf, num) {                        \
+		size_t len_ = num, src_inc_ = src_inc;                           \
+		if (dest_offset + len_ > dest_size) {                            \
+			if (!write_all(dest, sizeof(char), dest_offset, out))        \
+				return false;                                            \
+			dest_offset = 0;                                             \
+		}                                                                \
+		memcpy(dest + dest_offset, buf, len_ * sizeof(char));            \
+		src += src_inc_;                                                 \
+		src_count -= src_inc_;                                           \
+		dest_offset += len_;                                             \
+		tree_offset = 0;                                                 \
+		iter = pfx_tree_get_iter(substitutions);                         \
 	}
 
 	while(src_count > stop_at) {
 		pfx_tree_iter_t next = pfx_tree_iter_next(iter, src[tree_offset]);
+		++tree_offset;
 		if (next == NULL) {
-			MAYBE_WRITE(1);
-			dest[dest_offset] = src[0];
-			++src;
-			--src_count;
-			++dest_offset;
-			tree_offset = 0;
-			iter = pfx_tree_get_iter(substitutions);
+			MAYBE_WRITE_AND_COPY(1, src, 1);
 			continue;
 		}
 		iter = next;
-		++tree_offset;
 
 		char *replacement = pfx_tree_iter_data(iter);
-		if (replacement == NULL)
-			continue;
-
-		size_t rep_len = strlen(replacement);
-		MAYBE_WRITE(rep_len);
-		memcpy(dest + dest_offset, replacement, rep_len * sizeof(char));
-		src += tree_offset;
-		src_count -= tree_offset;
-		dest_offset += rep_len;
-		tree_offset = 0;
-		iter = pfx_tree_get_iter(substitutions);
-
+		if (replacement != NULL)
+			MAYBE_WRITE_AND_COPY(tree_offset, replacement, strlen(replacement));
 	}
 	return write_all(dest, sizeof(char), dest_offset, out);
 }
