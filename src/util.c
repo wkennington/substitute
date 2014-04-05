@@ -63,7 +63,7 @@ static bool replace_until(char *dest, size_t dest_size,
 	size_t dest_offset = 0, tree_offset = 0;
 	pfx_tree_iter_t iter = pfx_tree_get_iter(substitutions);
 
-#define MAYBE_WRITE_AND_COPY(src_inc, buf, num) {                        \
+#define MAYBE_WRITE_AND_COPY(src_inc, buf, num) do {                     \
 		size_t len_ = num, src_inc_ = src_inc;                           \
 		if (dest_offset + len_ > dest_size) {                            \
 			if (!write_all(dest, sizeof(char), dest_offset, out))        \
@@ -76,7 +76,7 @@ static bool replace_until(char *dest, size_t dest_size,
 		dest_offset += len_;                                             \
 		tree_offset = 0;                                                 \
 		iter = pfx_tree_get_iter(substitutions);                         \
-	}
+	} while(0)
 
 	while(src_count > stop_at) {
 		pfx_tree_iter_t next = pfx_tree_iter_next(iter, src[tree_offset]);
