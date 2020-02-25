@@ -42,6 +42,7 @@ static void check_string(const char *in, const wchar_t *expected)
 	ck_assert_int_eq(wcslen(ostr), wcslen(expected));
 	ck_assert_int_eq(memcmp(expected, ostr,
 				(wcslen(expected)+1) * sizeof(wchar_t)), 0);
+	free(ostr);
 }
 
 START_TEST(test_utf8_simple)
