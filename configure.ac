@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([substitute],
-        [0.1.0],
+        [0.1.1],
         [https://github.com/wkennington/substitute],
         [substitute],
         [william@wkennington.com])
